@@ -14,9 +14,9 @@ import pandas as pd
 import PyQt5 as qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QAction, QFileDialog, QMessageBox
 from PyQt5.QtCore import QCoreApplication
-from gui import *
-import fscode as fsc
-import data_process as dapr
+from FlameSoft.gui import *
+import FlameSoft.fscode as fsc
+import FlameSoft.data_process as dapr
 import numpy as np
 import pyqtgraph as pg
 
