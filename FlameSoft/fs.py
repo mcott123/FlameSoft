@@ -216,5 +216,4 @@ if __name__ == '__main__':
 
     cls2 = Data(r'E:\Github\Flame-Speed-Tool\bin\test.npy')
     img = cls2.array
-    cv2.imread(img)
     show(img)
