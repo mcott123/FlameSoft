@@ -65,13 +65,13 @@ class Flame(object):
         length, width = frame1.shape
         array = self.break_image(breaks, (length, width))
 
-        # Get video properties and make an empty numpy array to store the results
+        # Get video properties and make an empty numpy array to store the results(array shape frames * length)
         cap_fcount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         cap_fps = cap.get(cv2.CAP_PROP_FPS)
         cap_duration = cap_fcount / cap_fps
         ans = np.zeros((cap_fcount, crop_points[1][0] - crop_points[0][0]))
 
-        # Make the dictionary of the functions
+        # Make the dictionary of the functions to store the broken images
         fname = {}
         blur = {}
         view = {}
@@ -82,23 +82,30 @@ class Flame(object):
             view[f'view{index}'] = None
             thresh[f'thresh{index}'] = None
 
+        # Start counting the frames ( appending ans matrix)
         frame_count = 0
         while True:
 
             # Read the frames
             success, frame = cap.read()
 
+            # Break the loop on the last frame
             if not success:
                 break
 
+            # Convert the frame  to grayscale and crop the frame as per points
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
                     crop_points[0][0]:crop_points[1][0]]
+
+            # Substract the first frame from subsequent frames to reduce noise
             frame = frame - frame1
+
+            # Initiate count to count all the broken images
             count = 0
             for key, val, blur_key, view_key, thresh_key in \
                     zip(fname.keys(), array, blur.keys(), view.keys(), thresh.keys()):
 
-                # Divide the Frame
+                # Divide the Frame by iterating over the array
                 fname[key] = frame[:, val[0]:val[1]]
 
                 # Blur the image
@@ -112,6 +119,7 @@ class Flame(object):
                 # Add the images vertically together
                 view[view_key] = cv2.vconcat([fname[key], blur[blur_key], thresh[thresh_key]])
 
+                # Generate the string code to be execeuted to stich the images together horizontally
                 code2 = "cv2.hconcat(["
                 count2 = 0
                 for key, val1 in zip(view.keys(), view.values()):
@@ -127,23 +135,31 @@ class Flame(object):
 
                 count = count + 1
 
+            # Execute the code2 generates above and assign the value to variable views
             views = eval(code2)
 
+            # Get the slice of the pixels along the depth of image
             slice_val = fname['frame0'].shape[0] * 2 + int(fname['frame0'].shape[0] / 1.1)
-            if flow_right:
 
+            # Adjust the array for the flame flow
+            if flow_right:
                 ans[frame_count, :] = views[slice_val, :]
             else:
                 ans[frame_count, :] = views[slice_val, :][::-1]
+
+            # Increase the frame count
             frame_count = frame_count + 1
+            # Resize the images
             ans_img = cv2.resize(ans, (1080, 360))
             views = cv2.resize(views, (1020, 780))
+            # Show the images
             cv2.imshow('Thresh', ans_img)
             cv2.imshow('view', views)
             k = cv2.waitKey(10) & 0xff
             # Press esc on keyboard to  exit
             if k == 27:
                 break
+        # Save the image to numpy arrray
         np.save(r'E:\Github\Flame-Speed-Tool\bin\test', ans)
         cap.release()
         cv2.destroyAllWindows()
@@ -151,22 +167,23 @@ class Flame(object):
     @staticmethod
     def break_image(num: int, shape: tuple):
         """Method to break the image """
+        # Make a array based on number and shape of tuple(shape of image)
         array = np.append(np.arange(0, shape[1], int(shape[1] / num)), shape[1])
+        # Create the empty list to be appended
         ans = []
-
+        # Iterate to get the tuples of slices
         for index, val in enumerate(array):
-
+            # Append while index < len(array) - 1
             if index < len(array) - 1:
                 ans.append((int(array[index]), int(array[index + 1])))
 
+        # if the differecnce in last break is less than 20 the delete and replace that with prior tuple
         if ans[-1][1] - ans[-1][0] < 10:
             val1 = ans[-1][1]
             val0 = ans[-2][0]
             ans.pop(-1)
             ans.pop(-1)
             ans.append((val0, val1))
-
-            # print('check', ans[-1][1] - ans[-1][0])
 
         return ans
 
