@@ -161,6 +161,7 @@ class Flame(object):
                 break
         # Save the image to numpy arrray
         np.save(r'E:\Github\Flame-Speed-Tool\bin\test', ans)
+        cv2.imwrite(r'E:\Github\Flame-Speed-Tool\bin\test.png', ans)
         cap.release()
         cv2.destroyAllWindows()
 
@@ -194,13 +195,13 @@ class Data(object):
         self.array = np.load(path)
         self.df = pd.DataFrame(self.array)
 
-
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     path = r'E:\Github\Flame-Speed-Tool\bin\test.avi'
 
-    cls = Crop(path).crop_video
+    cls = Crop(path)
+    cls.crop_video()
     points = cls.points
     # points = [(930, 97), (1848, 666)]
     cls1 = Flame(path)
@@ -215,4 +216,5 @@ if __name__ == '__main__':
 
     cls2 = Data(r'E:\Github\Flame-Speed-Tool\bin\test.npy')
     img = cls2.array
+    cv2.imread(img)
     show(img)
