@@ -23,7 +23,9 @@ vals = dict(path=ws['F7'].value,
             filter=string_to_list(ws['F9'].value),
             thresh=string_to_list(ws['F10'].value),
             flow=ws['F11'].value,
-            operation=ws['F12'].value)
+            operation=ws['F12'].value,
+            length=ws['F13'].value,
+            fps=ws['F14'].value)
 
 cls = fs.Flame(path=vals['path'])
 
@@ -40,8 +42,10 @@ try:
         cls.get_data()
     elif vals['operation'] == 5:
         cls.view_pimage()
-
+    elif vals['operation'] == 6:
+        cls.get_data(length=vals['length'], fps=vals['fps'])
     exit()
+
 except Exception as _:
     print(vals)
     exit()
