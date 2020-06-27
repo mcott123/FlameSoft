@@ -1,5 +1,7 @@
 import os
+from sys import path
 
+path.append(r'E:\Github\Flame-Speed-Tool\FlameSoft')
 import cv2 as cv2
 import numpy as np
 from pandas import read_csv
@@ -50,13 +52,13 @@ class Crop(object):
 
     def crop_image(self, path):
         image = cv2.imread(path)
+
         self.image = image
         cv2.namedWindow('Frame')
         cv2.setMouseCallback('Frame', self.mouse_crop)
         cv2.imshow('Frame', self.image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-
         return self.points
 
 
@@ -67,10 +69,11 @@ class Flame(object):
     arraypath = r'../bin/numpy'
     outpath = r'../bin/output.xlsx'
 
-    def __init__(self, path_: str):
+    def __init__(self, path: str):
         self.path = path
-        if not os.path.exists(r'../bin'):
-            os.mkdir(r'../bin')
+        if not os.path.exists(r'bin'):
+            print(os.getcwd())
+            os.mkdir(r'bin')
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool):
 
@@ -214,28 +217,32 @@ class Flame(object):
     def whiten_image(self, path_: str = None):
         """Method to whited the pixels of the image before edge detection"""
         # Check if the path is provided else use class variable
-        if path_ is None:
-            path_ = Flame.imagepath
-        # Get the points to be blackened
-        points = Crop().crop_image(path_)
-        img = cv2.imread(path_)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        try:
+            if path_ is None:
+                path_ = Flame.imagepath
+            # Get the points to be blackened
+            points = Crop().crop_image(path_)
+            img = cv2.imread(path_)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            print('check')
+            # Get the values of the points sorted for the slice of the array
+            x_start = min(points[0][0], points[1][0])
+            if x_start < 0:
+                x_start = 0
+            x_end = max(points[0][0], points[1][0])
+            y_start = min(points[0][1], points[1][1])
+            if y_start < 0:
+                y_start = 0
+            y_end = max(points[0][1], points[1][1])
 
-        # Get the values of the points sorted for the slice of the array
-        x_start = min(points[0][0], points[1][0])
-        if x_start < 0:
-            x_start = 0
-        x_end = max(points[0][0], points[1][0])
-        y_start = min(points[0][1], points[1][1])
-        if y_start < 0:
-            y_start = 0
-        y_end = max(points[0][1], points[1][1])
+            # Assign pixels the value of 255 (white)
+            img[y_start:y_end, x_start:x_end] = 255
 
-        # Assign pixels the value of 255 (white)
-        img[y_start:y_end, x_start:x_end] = 255
+            # Write the image to path
+            cv2.imwrite(path_, img)
 
-        # Write the image to path
-        cv2.imwrite(path_, img)
+        except Exception as e:
+            print(e)
 
         return 0
 
