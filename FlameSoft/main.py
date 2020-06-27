@@ -18,7 +18,8 @@ def string_to_list(var: str):
 wb = load_workbook(r'E:\Github\Flame-Speed-Tool\FlameSoft\FlameSoft.xlsm', read_only=True, data_only=True)
 ws = wb['Control_Sheet']
 
-vals = dict(path=ws['F7'].value,
+vals = dict(out=ws['F6'].value,
+            path=ws['F7'].value,
             slices=ws['F8'].value,
             filter=string_to_list(ws['F9'].value),
             thresh=string_to_list(ws['F10'].value),
@@ -27,7 +28,7 @@ vals = dict(path=ws['F7'].value,
             length=ws['F13'].value,
             fps=ws['F14'].value)
 
-cls = fs.Flame(path=vals['path'])
+cls = fs.Flame(path=vals['path'], out=vals['out'])
 
 try:
     if vals['operation'] == 1:
@@ -43,7 +44,7 @@ try:
     elif vals['operation'] == 5:
         cls.view_pimage()
     elif vals['operation'] == 6:
-        cls.get_data(length=vals['length'], fps=vals['fps'])
+        cls.Dataframe(length=vals['length'], fps=vals['fps'])
     exit()
 
 except Exception as _:
