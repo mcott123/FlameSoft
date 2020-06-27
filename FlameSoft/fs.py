@@ -63,17 +63,22 @@ class Crop(object):
 
 
 class Flame(object):
-    textpath = r'../bin/text.txt'
-    edgepath = r'../bin/edge.png'
-    imagepath = r'../bin/process.png'
-    arraypath = r'../bin/numpy'
-    outpath = r'../bin/output.xlsx'
+    textpath = ""
+    edgepath = ""
+    imagepath = ""
+    arraypath = ""
+    outpath = ""
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, out: str):
         self.path = path
-        if not os.path.exists(r'bin'):
-            print(os.getcwd())
-            os.mkdir(r'bin')
+        self.out = out
+        if not os.path.exists(self.out + r'\bin'):
+            os.mkdir(self.out + r'\bin')
+        Flame.textpath = self.out + r'\bin' + r'\text.txt'
+        Flame.edgepath = self.out + r'\bin' + r'\edge.png'
+        Flame.imagepath = self.out + r'\bin' + r'\process.png'
+        Flame.arraypath = self.out + r'\bin' + r'\numpy'
+        Flame.outpath = self.out + r'\bin' + r'\output.xlsx'
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool):
 
@@ -224,7 +229,6 @@ class Flame(object):
             points = Crop().crop_image(path_)
             img = cv2.imread(path_)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            print('check')
             # Get the values of the points sorted for the slice of the array
             x_start = min(points[0][0], points[1][0])
             if x_start < 0:
@@ -343,7 +347,7 @@ if __name__ == '__main__':
     cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75], crop_points=points,
                  flow_right=True)
 
+
     def show(val):
         plt.imshow(cv2.imread(val))
         plt.show()
-
