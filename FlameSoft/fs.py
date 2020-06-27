@@ -339,30 +339,11 @@ if __name__ == '__main__':
     path = r'E:\Github\Flame-Speed-Tool\bin\test.avi'
 
     points = Crop(path).crop_video()
-    # points = [(930, 97), (1848, 666)]
     cls1 = Flame(path)
     cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75], crop_points=points,
                  flow_right=True)
-
-
-    # cls1.whiten_image(path=r'E:\Github\Flame-Speed-Tool\bin\test.png')
 
     def show(val):
         plt.imshow(cv2.imread(val))
         plt.show()
 
-    # cls2 = Data(r'E:\Github\Flame-Speed-Tool\bin\test.npy')
-    # img = cls2.array
-    # show(img)
-    # points = [(656, 315), (784, 416)]
-    # img2 = cv2.imread(r'E:\Github\Flame-Speed-Tool\bin\test.png')
-    # edges = cv2.Canny(img2, 100, 200)[0:540, :]
-    #
-    # cv2.imshow('image1', img2)
-    # cv2.imshow('image', edges)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
-    # cls = Crop()
-    # cls.crop_image(r'E:\Github\Flame-Speed-Tool\bin\test.png')
-    # points = [(656, 315), (784, 416)]
