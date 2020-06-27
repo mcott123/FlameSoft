@@ -1,11 +1,13 @@
+import os
+
 import cv2 as cv2
 import numpy as np
-import pandas as pd
+from pandas import read_csv
 
 
 class Crop(object):
 
-    def __init__(self, path: str):
+    def __init__(self, path: str = None):
         """The crop class to get the pixel values for the cropped image
         path: string array to the path
         """
@@ -23,7 +25,7 @@ class Crop(object):
             self.points[1] = (x, y)
 
             # Draw the rectangle around the slected path
-            cv2.rectangle(self.image, self.points[0], self.points[1], (255, 0, 0), 10)
+            cv2.rectangle(self.image, self.points[0], self.points[1], (255, 0, 0), 3)
             cv2.imshow('Frame', self.image)
 
     def crop_video(self):
@@ -44,11 +46,31 @@ class Crop(object):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
+        return self.points
+
+    def crop_image(self, path):
+        image = cv2.imread(path)
+        self.image = image
+        cv2.namedWindow('Frame')
+        cv2.setMouseCallback('Frame', self.mouse_crop)
+        cv2.imshow('Frame', self.image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        return self.points
+
 
 class Flame(object):
+    textpath = r'../bin/text.txt'
+    edgepath = r'../bin/edge.png'
+    imagepath = r'../bin/process.png'
+    arraypath = r'../bin/numpy'
+    outpath = r'../bin/output.xlsx'
 
-    def __init__(self, path: str):
+    def __init__(self, path_: str):
         self.path = path
+        if not os.path.exists(r'../bin'):
+            os.mkdir(r'../bin')
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool):
 
@@ -149,6 +171,7 @@ class Flame(object):
 
             # Increase the frame count
             frame_count = frame_count + 1
+            # self.pimage = ans
             # Resize the images
             ans_img = cv2.resize(ans, (1080, 360))
             views = cv2.resize(views, (1020, 780))
@@ -160,8 +183,8 @@ class Flame(object):
             if k == 27:
                 break
         # Save the image to numpy arrray
-        np.save(r'E:\Github\Flame-Speed-Tool\bin\test', ans)
-        cv2.imwrite(r'E:\Github\Flame-Speed-Tool\bin\test.png', ans)
+        np.save(Flame.arraypath, ans)
+        cv2.imwrite(Flame.imagepath, ans)
         cap.release()
         cv2.destroyAllWindows()
 
@@ -188,32 +211,151 @@ class Flame(object):
 
         return ans
 
+    def whiten_image(self, path_: str = None):
+        """Method to whited the pixels of the image before edge detection"""
+        # Check if the path is provided else use class variable
+        if path_ is None:
+            path_ = Flame.imagepath
+        # Get the points to be blackened
+        points = Crop().crop_image(path_)
+        img = cv2.imread(path_)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-class Data(object):
+        # Get the values of the points sorted for the slice of the array
+        x_start = min(points[0][0], points[1][0])
+        if x_start < 0:
+            x_start = 0
+        x_end = max(points[0][0], points[1][0])
+        y_start = min(points[0][1], points[1][1])
+        if y_start < 0:
+            y_start = 0
+        y_end = max(points[0][1], points[1][1])
 
-    def __init__(self, path: str):
-        self.array = np.load(path)
-        self.df = pd.DataFrame(self.array)
+        # Assign pixels the value of 255 (white)
+        img[y_start:y_end, x_start:x_end] = 255
+
+        # Write the image to path
+        cv2.imwrite(path_, img)
+
+        return 0
+
+    def blacken_image(self, path_: str = None):
+        """Method to blacken the pixels of image before edge detection"""
+
+        # Check if the path is provided else use class variable
+        if path_ is None:
+            path_ = Flame.imagepath
+
+        # Get the points to be blackened
+        points = Crop().crop_image(path_)
+        img = cv2.imread(path_)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Get the values of the points sorted for the slice of the array
+        x_start = min(points[0][0], points[1][0])
+        if x_start < 0:
+            x_start = 0
+        x_end = max(points[0][0], points[1][0])
+        y_start = min(points[0][1], points[1][1])
+        if y_start < 0:
+            y_start = 0
+        y_end = max(points[0][1], points[1][1])
+
+        # Assign pixels the value of 0 (black)
+        img[y_start:y_end, x_start:x_end] = 0
+
+        # Write the image to path
+        cv2.imwrite(path_, img)
+
+        return 0
+
+    def get_data(self):
+        """Method to get the edge from the threshed imaage and save data to test and npy array"""
+
+        # Read the image
+        img = cv2.imread(self.imagepath)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # Run Canny edge detector with default arguments
+        edge = cv2.Canny(img, 100, 200)
+
+        # Get the x and y arrays for the edge using np.where
+        x, y = np.where(edge == 255)
+
+        # Reshape and  array so that it could be written ( row array to column array)
+        ans = np.hstack([x.reshape(-1, 1), y.reshape(-1, 1)])
+
+        # Write the image to the path
+        cv2.imwrite(Flame.edgepath, edge)
+        np.savetxt(Flame.textpath, ans, delimiter=',')
+
+        return ans
+
+    @staticmethod
+    def Dataframe(length: float, fps: float):
+        """Method to process the text data to the Dataframe and save to output.xlsx"""
+
+        # Make the dataframe from the text path
+        df = read_csv(Flame.textpath, sep=',', header=None)
+        df.columns = ['Frame', 'XPixel']
+
+        # Read the image to get the value for the y pixels
+        img = cv2.imread(Flame.edgepath)
+        pixels = img.shape[1]
+
+        # Pixel length = length / number of pixels
+        pixel_length = round(length / pixels, 6)
+
+        # Make the columns for time and distance
+        df['Time (msec)'] = df['Frame'] * 1000 / fps
+        df['Distance (ft)'] = df['XPixel'] * pixel_length
+
+        # Save the df to excel
+        df.to_excel(Flame.outpath)
+
+        return df
+
+    def view_pimage(self):
+        """Method to view the Thresh Image before passing to edge dectector"""
+
+        img = cv2.imread(Flame.imagepath)
+        cv2.imshow('Processed Image', img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        return 0
+
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     path = r'E:\Github\Flame-Speed-Tool\bin\test.avi'
 
-    cls = Crop(path)
-    cls.crop_video()
-    points = cls.points
+    points = Crop(path).crop_video()
     # points = [(930, 97), (1848, 666)]
     cls1 = Flame(path)
-    cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75],
-                 crop_points=points, flow_right=True)
+    cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75], crop_points=points,
+                 flow_right=True)
 
+
+    # cls1.whiten_image(path=r'E:\Github\Flame-Speed-Tool\bin\test.png')
 
     def show(val):
-        plt.imshow(val)
+        plt.imshow(cv2.imread(val))
         plt.show()
 
+    # cls2 = Data(r'E:\Github\Flame-Speed-Tool\bin\test.npy')
+    # img = cls2.array
+    # show(img)
+    # points = [(656, 315), (784, 416)]
+    # img2 = cv2.imread(r'E:\Github\Flame-Speed-Tool\bin\test.png')
+    # edges = cv2.Canny(img2, 100, 200)[0:540, :]
+    #
+    # cv2.imshow('image1', img2)
+    # cv2.imshow('image', edges)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
-    cls2 = Data(r'E:\Github\Flame-Speed-Tool\bin\test.npy')
-    img = cls2.array
-    show(img)
+    # cls = Crop()
+    # cls.crop_image(r'E:\Github\Flame-Speed-Tool\bin\test.png')
+    # points = [(656, 315), (784, 416)]
