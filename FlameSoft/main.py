@@ -16,6 +16,7 @@ def string_to_list(var: str):
 
 
 def read_txt(path: str):
+    """Function to read the points.txt and output list of points"""
     ans = []
     with open(path, 'r') as file:
         for line in file:
@@ -58,9 +59,9 @@ try:
         else:
 
             points = fs.Crop(path=vals['path'], out=vals['out']).crop_video()
-        c
-        ls.process(breaks=vals['slices'], filter_size=vals['filter'], thresh_val=vals['thresh'], crop_points=points,
-                   flow_right=vals['flow'])
+
+        cls.process(breaks=vals['slices'], filter_size=vals['filter'], thresh_val=vals['thresh'], crop_points=points,
+                    flow_right=vals['flow'])
 
     elif vals['operation'] == 2:
         cls.whiten_image()
