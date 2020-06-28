@@ -9,13 +9,14 @@ from pandas import read_csv
 
 class Crop(object):
 
-    def __init__(self, path: str = None):
+    def __init__(self, out: str, path: str):
         """The crop class to get the pixel values for the cropped image
         path: string array to the path
         """
         self.path = path
         self.points = [(), ()]
         self.image = None
+        self.out = out
 
     def mouse_crop(self, event, x, y, flags, param):
         """Method to get the x and y locations on the image"""
@@ -47,6 +48,10 @@ class Crop(object):
         cv2.imshow('Frame', self.image)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+        with open(self.out + r'\bin' + r'\points.txt', 'w+') as out:
+            for tp in self.points:
+                for val in tp:
+                    out.write(str(val) + '\n')
 
         return self.points
 
@@ -338,16 +343,14 @@ class Flame(object):
 
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
     path = r'E:\Github\Flame-Speed-Tool\bin\test.avi'
 
-    points = Crop(path).crop_video()
-    cls1 = Flame(path)
-    cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75], crop_points=points,
-                 flow_right=True)
-
-
-    def show(val):
-        plt.imshow(cv2.imread(val))
-        plt.show()
+    points = Crop(path=path, out=r'E:\Github\Flame-Speed-Tool').crop_video()
+    # cls1 = Flame(path)
+    # cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75], crop_points=points,
+    #              flow_right=True)
+    #
+    #
+    # def show(val):
+    #     plt.imshow(cv2.imread(val))
+    #     plt.show()
