@@ -40,7 +40,8 @@ vals = dict(out=ws['F6'].value,
             operation=ws['F12'].value,
             length=ws['F13'].value,
             fps=ws['F14'].value,
-            crop_previous=ws['F15'].value)
+            crop_previous=ws['F15'].value,
+            hratio=ws['F16'].value)
 
 cls = fs.Flame(path=vals['path'], out=vals['out'])
 
@@ -61,7 +62,7 @@ try:
             points = fs.Crop(path=vals['path'], out=vals['out']).crop_video()
 
         cls.process(breaks=vals['slices'], filter_size=vals['filter'], thresh_val=vals['thresh'], crop_points=points,
-                    flow_right=vals['flow'])
+                    flow_right=vals['flow'], height=vals['hratio'])
 
     elif vals['operation'] == 2:
         cls.whiten_image()
