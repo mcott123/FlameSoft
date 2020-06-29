@@ -85,7 +85,8 @@ class Flame(object):
         Flame.arraypath = self.out + r'\bin' + r'\numpy'
         Flame.outpath = self.out + r'\bin' + r'\output.xlsx'
 
-    def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool):
+    def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool,
+                height: float):
 
         # Assert check for the length of inputs
         if len(filter_size) != breaks or len(thresh_val) != breaks:
@@ -107,11 +108,13 @@ class Flame(object):
         ans = np.zeros((cap_fcount, crop_points[1][0] - crop_points[0][0]))
 
         # Make the dictionary of the functions to store the broken images
+        fname_ = {}
         fname = {}
         blur = {}
         view = {}
         thresh = {}
         for index, val in enumerate(array):
+            fname_[f'oframe{index}'] = None
             fname[f'frame{index}'] = None
             blur[f'blur{index}'] = None
             view[f'view{index}'] = None
@@ -133,12 +136,16 @@ class Flame(object):
                     crop_points[0][0]:crop_points[1][0]]
 
             # Substract the first frame from subsequent frames to reduce noise
+            original = frame
             frame = frame - frame1
 
             # Initiate count to count all the broken images
             count = 0
-            for key, val, blur_key, view_key, thresh_key in \
-                    zip(fname.keys(), array, blur.keys(), view.keys(), thresh.keys()):
+            for okey, key, val, blur_key, view_key, thresh_key in \
+                    zip(fname_.keys(), fname.keys(), array, blur.keys(), view.keys(), thresh.keys()):
+
+                # Original Frame
+                fname_[okey] = original[:, val[0]:val[1]]
 
                 # Divide the Frame by iterating over the array
                 fname[key] = frame[:, val[0]:val[1]]
@@ -152,7 +159,7 @@ class Flame(object):
                 # _, thresh[thresh_key] = cv2.threshold(thresh[thresh_key], 100, 255, cv2.THRESH_BINARY)
 
                 # Add the images vertically together
-                view[view_key] = cv2.vconcat([fname[key], blur[blur_key], thresh[thresh_key]])
+                view[view_key] = cv2.vconcat([fname_[okey], fname[key], blur[blur_key], thresh[thresh_key]])
 
                 # Generate the string code to be execeuted to stich the images together horizontally
                 code2 = "cv2.hconcat(["
@@ -174,7 +181,7 @@ class Flame(object):
             views = eval(code2)
 
             # Get the slice of the pixels along the depth of image
-            slice_val = fname['frame0'].shape[0] * 2 + int(fname['frame0'].shape[0] / 1.1)
+            slice_val = fname['frame0'].shape[0] * 3 + int(fname['frame0'].shape[0] / height)
 
             # Adjust the array for the flame flow
             if flow_right:
@@ -190,7 +197,7 @@ class Flame(object):
             views = cv2.resize(views, (1020, 780))
             # Show the images
             cv2.imshow('Thresh', ans_img)
-            cv2.imshow('view', views)
+            cv2.imshow('Views', views)
             k = cv2.waitKey(10) & 0xff
             # Press esc on keyboard to  exit
             if k == 27:
