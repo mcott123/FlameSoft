@@ -323,8 +323,8 @@ class Flame(object):
         pixel_length = round(length / pixels, 6)
 
         # Make the columns for time and distance
-        df['Time (msec)'] = df['Frame'] * 1000 / fps
         df['Distance (ft)'] = df['XPixel'] * pixel_length
+        df['Time (msec)'] = df['Frame'] * 1000 / fps
 
         # Save the df to excel
         df.to_excel(Flame.outpath)
