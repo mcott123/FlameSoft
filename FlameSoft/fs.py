@@ -9,7 +9,7 @@ from pandas import read_csv
 
 class Crop(object):
 
-    def __init__(self, out: str, path: str):
+    def __init__(self, out: str = None, path: str = None):
         """The crop class to get the pixel values for the cropped image
         path: string array to the path
         """
