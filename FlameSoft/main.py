@@ -47,7 +47,7 @@ try:
                 fps=ws['F14'].value,
                 crop_previous=ws['F15'].value,
                 hratio=ws['F16'].value)
-
+    print(vals)
     cls = fs.Flame(path=vals['path'], out=vals['out'])
 
 except Exception as _:
@@ -86,8 +86,6 @@ try:
 
     elif vals['operation'] == 6:
         cls.Dataframe(length=vals['length'], fps=vals['fps'])
-
-    print(vals)
 
     exit()
 
