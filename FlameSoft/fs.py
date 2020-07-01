@@ -1,7 +1,5 @@
 import os
-from sys import path
 
-path.append(r'E:\Github\Flame-Speed-Tool\FlameSoft')
 import cv2 as cv2
 import numpy as np
 from pandas import read_csv
@@ -87,126 +85,129 @@ class Flame(object):
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool,
                 height: float):
+        try:
+            # Assert check for the length of inputs
+            if len(filter_size) != breaks or len(thresh_val) != breaks:
+                raise AssertionError("Length of Filter Size and Thresh Val == Breaks")
 
-        # Assert check for the length of inputs
-        if len(filter_size) != breaks or len(thresh_val) != breaks:
-            raise AssertionError("Length of Filter Size and Thresh Val == Breaks")
-
-        # Capture the video
-        cap = cv2.VideoCapture(self.path)
-        success, frame = cap.read()
-        frame1 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
-                 crop_points[0][0]:crop_points[1][0]]
-        # Break the image inot parts
-        length, width = frame1.shape
-        array = self.break_image(breaks, (length, width))
-
-        # Get video properties and make an empty numpy array to store the results(array shape frames * length)
-        cap_fcount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        cap_fps = cap.get(cv2.CAP_PROP_FPS)
-        cap_duration = cap_fcount / cap_fps
-        ans = np.zeros((cap_fcount, crop_points[1][0] - crop_points[0][0]))
-
-        # Make the dictionary of the functions to store the broken images
-        fname_ = {}
-        fname = {}
-        blur = {}
-        view = {}
-        thresh = {}
-        for index, val in enumerate(array):
-            fname_[f'oframe{index}'] = None
-            fname[f'frame{index}'] = None
-            blur[f'blur{index}'] = None
-            view[f'view{index}'] = None
-            thresh[f'thresh{index}'] = None
-
-        # Start counting the frames ( appending ans matrix)
-        frame_count = 0
-        while True:
-
-            # Read the frames
+            # Capture the video
+            cap = cv2.VideoCapture(self.path)
             success, frame = cap.read()
+            frame1 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
+                     crop_points[0][0]:crop_points[1][0]]
+            # Break the image inot parts
+            length, width = frame1.shape
+            array = self.break_image(breaks, (length, width))
 
-            # Break the loop on the last frame
-            if not success:
-                break
+            # Get video properties and make an empty numpy array to store the results(array shape frames * length)
+            cap_fcount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            cap_fps = cap.get(cv2.CAP_PROP_FPS)
+            cap_duration = cap_fcount / cap_fps
+            ans = np.zeros((cap_fcount, crop_points[1][0] - crop_points[0][0]))
 
-            # Convert the frame  to grayscale and crop the frame as per points
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
-                    crop_points[0][0]:crop_points[1][0]]
+            # Make the dictionary of the functions to store the broken images
+            fname_ = {}
+            fname = {}
+            blur = {}
+            view = {}
+            thresh = {}
+            for index, val in enumerate(array):
+                fname_[f'oframe{index}'] = None
+                fname[f'frame{index}'] = None
+                blur[f'blur{index}'] = None
+                view[f'view{index}'] = None
+                thresh[f'thresh{index}'] = None
 
-            # Substract the first frame from subsequent frames to reduce noise
-            original = frame
-            frame = frame - frame1
+            # Start counting the frames ( appending ans matrix)
+            frame_count = 0
+            while True:
 
-            # Initiate count to count all the broken images
-            count = 0
-            for okey, key, val, blur_key, view_key, thresh_key in \
-                    zip(fname_.keys(), fname.keys(), array, blur.keys(), view.keys(), thresh.keys()):
+                # Read the frames
+                success, frame = cap.read()
 
-                # Original Frame
-                fname_[okey] = original[:, val[0]:val[1]]
+                # Break the loop on the last frame
+                if not success:
+                    break
 
-                # Divide the Frame by iterating over the array
-                fname[key] = frame[:, val[0]:val[1]]
+                # Convert the frame  to grayscale and crop the frame as per points
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
+                        crop_points[0][0]:crop_points[1][0]]
 
-                # Blur the image
-                blur[blur_key] = cv2.blur(fname[key], (filter_size[count], filter_size[count]))
+                # Substract the first frame from subsequent frames to reduce noise
+                original = frame
+                frame = frame - frame1
 
-                # Thresh the image
-                _, thresh[thresh_key] = cv2.threshold(blur[blur_key], thresh_val[count], 255, cv2.THRESH_BINARY)
-                # thresh[thresh_key] = cv2.blur(thresh[thresh_key], (25, 25))
-                # _, thresh[thresh_key] = cv2.threshold(thresh[thresh_key], 100, 255, cv2.THRESH_BINARY)
+                # Initiate count to count all the broken images
+                count = 0
+                for okey, key, val, blur_key, view_key, thresh_key in \
+                        zip(fname_.keys(), fname.keys(), array, blur.keys(), view.keys(), thresh.keys()):
 
-                # Add the images vertically together
-                view[view_key] = cv2.vconcat([fname_[okey], fname[key], blur[blur_key], thresh[thresh_key]])
+                    # Original Frame
+                    fname_[okey] = original[:, val[0]:val[1]]
 
-                # Generate the string code to be execeuted to stich the images together horizontally
-                code2 = "cv2.hconcat(["
-                count2 = 0
-                for key, val1 in zip(view.keys(), view.values()):
-                    if val1 is not None:
-                        if count2 < 1:
-                            code2 = code2 + f"view['{key}']"
+                    # Divide the Frame by iterating over the array
+                    fname[key] = frame[:, val[0]:val[1]]
 
-                        else:
-                            code2 = code2 + "," + f"view['{key}']"
-                        count2 = count2 + 1
+                    # Blur the image
+                    blur[blur_key] = cv2.blur(fname[key], (filter_size[count], filter_size[count]))
 
-                code2 = code2 + "])"
+                    # Thresh the image
+                    _, thresh[thresh_key] = cv2.threshold(blur[blur_key], thresh_val[count], 255, cv2.THRESH_BINARY)
+                    # thresh[thresh_key] = cv2.blur(thresh[thresh_key], (25, 25))
+                    # _, thresh[thresh_key] = cv2.threshold(thresh[thresh_key], 100, 255, cv2.THRESH_BINARY)
 
-                count = count + 1
+                    # Add the images vertically together
+                    view[view_key] = cv2.vconcat([fname_[okey], fname[key], blur[blur_key], thresh[thresh_key]])
 
-            # Execute the code2 generates above and assign the value to variable views
-            views = eval(code2)
+                    # Generate the string code to be execeuted to stich the images together horizontally
+                    code2 = "cv2.hconcat(["
+                    count2 = 0
+                    for key, val1 in zip(view.keys(), view.values()):
+                        if val1 is not None:
+                            if count2 < 1:
+                                code2 = code2 + f"view['{key}']"
 
-            # Get the slice of the pixels along the depth of image
-            slice_val = fname['frame0'].shape[0] * 3 + int(fname['frame0'].shape[0] / height)
+                            else:
+                                code2 = code2 + "," + f"view['{key}']"
+                            count2 = count2 + 1
 
-            # Adjust the array for the flame flow
-            if flow_right:
-                ans[frame_count, :] = views[slice_val, :]
-            else:
-                ans[frame_count, :] = views[slice_val, :][::-1]
+                    code2 = code2 + "])"
 
-            # Increase the frame count
-            frame_count = frame_count + 1
-            # self.pimage = ans
-            # Resize the images
-            ans_img = cv2.resize(ans, (1080, 360))
-            views = cv2.resize(views, (1020, 780))
-            # Show the images
-            cv2.imshow('Thresh', ans_img)
-            cv2.imshow('Views', views)
-            k = cv2.waitKey(10) & 0xff
-            # Press esc on keyboard to  exit
-            if k == 27:
-                break
-        # Save the image to numpy arrray
-        np.save(Flame.arraypath, ans)
-        cv2.imwrite(Flame.imagepath, ans)
-        cap.release()
-        cv2.destroyAllWindows()
+                    count = count + 1
+
+                # Execute the code2 generates above and assign the value to variable views
+                views = eval(code2)
+
+                # Get the slice of the pixels along the depth of image
+                slice_val = fname['frame0'].shape[0] * 3 + int(fname['frame0'].shape[0] / height)
+
+                # Adjust the array for the flame flow
+                if flow_right:
+                    ans[frame_count, :] = views[slice_val, :]
+                else:
+                    ans[frame_count, :] = views[slice_val, :][::-1]
+
+                # Increase the frame count
+                frame_count = frame_count + 1
+                # self.pimage = ans
+                # Resize the images
+                ans_img = cv2.resize(ans, (1080, 360))
+                views = cv2.resize(views, (1020, 780))
+                # Show the images
+                cv2.imshow('Thresh', ans_img)
+                cv2.imshow('Views', views)
+                k = cv2.waitKey(10) & 0xff
+                # Press esc on keyboard to  exit
+                if k == 27:
+                    break
+            # Save the image to numpy arrray
+            np.save(Flame.arraypath, ans)
+            cv2.imwrite(Flame.imagepath, ans)
+            cap.release()
+            cv2.destroyAllWindows()
+
+        except Exception as _:
+            print(e)
 
     @staticmethod
     def break_image(num: int, shape: tuple):
@@ -352,7 +353,7 @@ class Flame(object):
 if __name__ == '__main__':
     path = r'E:\Github\Flame-Speed-Tool\bin\test.avi'
 
-    points = Crop(path=path, out=r'E:\Github\Flame-Speed-Tool').crop_video()
+    # points = Crop(path=path, out=r'E:\Github\Flame-Speed-Tool').crop_video()
     # cls1 = Flame(path)
     # cls1.process(breaks=4, filter_size=[50, 50, 50, 50], thresh_val=[25, 50, 80, 75], crop_points=points,
     #              flow_right=True)
