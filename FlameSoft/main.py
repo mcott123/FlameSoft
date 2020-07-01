@@ -32,8 +32,10 @@ def read_txt(path: str):
     return ans
 
 
+path_to_excel = r'E:\Github\Flame-Speed-Tool\FlameSoft\FlameSoft.xlsm'
+
 try:
-    wb = load_workbook(getcwd() + r'\FlameSoft\FlameSoft.xlsm', read_only=True, data_only=True)
+    wb = load_workbook(path_to_excel, read_only=True, data_only=True)
     ws = wb['Control_Sheet']
 
     vals = dict(out=ws['F6'].value,
