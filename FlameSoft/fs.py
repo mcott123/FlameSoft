@@ -50,7 +50,7 @@ class Crop(object):
             for tp in self.points:
                 for val in tp:
                     out.write(str(val) + '\n')
-
+        # print(self.points)
         return self.points
 
     def crop_image(self, path):
@@ -93,6 +93,17 @@ class Flame(object):
             # Capture the video
             cap = cv2.VideoCapture(self.path)
             success, frame = cap.read()
+            # Rearrage the crop points for left
+            x_start = min(crop_points[0][0], crop_points[1][0])
+            if x_start < 0:
+                x_start = 0
+            x_end = max(crop_points[0][0], crop_points[1][0])
+            y_start = min(crop_points[0][1], crop_points[1][1])
+            if y_start < 0:
+                y_start = 0
+            y_end = max(crop_points[0][1], crop_points[1][1])
+            crop_points = [(x_start, y_start), (x_end, y_end)]
+
             frame1 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
                      crop_points[0][0]:crop_points[1][0]]
             # Break the image inot parts
@@ -207,7 +218,7 @@ class Flame(object):
             cv2.destroyAllWindows()
 
         except Exception as _:
-            print(e)
+            print(_)
 
     @staticmethod
     def break_image(num: int, shape: tuple):
