@@ -1,8 +1,12 @@
+from os import getcwd
 from sys import exit, path
 
 from openpyxl import load_workbook
 
-path.append(r'E:\Github\Flame-Speed-Tool')
+path.append(getcwd())
+path.append(r'..')
+
+# Import later to avoid import error
 import FlameSoft.fs as fs
 
 
@@ -28,22 +32,26 @@ def read_txt(path: str):
     return ans
 
 
-wb = load_workbook(r'E:\Github\Flame-Speed-Tool\FlameSoft\FlameSoft.xlsm', read_only=True, data_only=True)
-ws = wb['Control_Sheet']
+try:
+    wb = load_workbook(getcwd() + r'\FlameSoft\FlameSoft.xlsm', read_only=True, data_only=True)
+    ws = wb['Control_Sheet']
 
-vals = dict(out=ws['F6'].value,
-            path=ws['F7'].value,
-            slices=ws['F8'].value,
-            filter=string_to_list(ws['F9'].value),
-            thresh=string_to_list(ws['F10'].value),
-            flow=ws['F11'].value,
-            operation=ws['F12'].value,
-            length=ws['F13'].value,
-            fps=ws['F14'].value,
-            crop_previous=ws['F15'].value,
-            hratio=ws['F16'].value)
+    vals = dict(out=ws['F6'].value,
+                path=ws['F7'].value,
+                slices=ws['F8'].value,
+                filter=string_to_list(ws['F9'].value),
+                thresh=string_to_list(ws['F10'].value),
+                flow=ws['F11'].value,
+                operation=ws['F12'].value,
+                length=ws['F13'].value,
+                fps=ws['F14'].value,
+                crop_previous=ws['F15'].value,
+                hratio=ws['F16'].value)
 
-cls = fs.Flame(path=vals['path'], out=vals['out'])
+    cls = fs.Flame(path=vals['path'], out=vals['out'])
+
+except Exception as _:
+    print(_)
 
 try:
     if vals['operation'] == 1:
@@ -84,5 +92,5 @@ try:
     exit()
 
 except Exception as _:
-    print(vals)
+    print(_)
     exit()
