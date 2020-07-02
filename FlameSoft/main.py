@@ -1,10 +1,16 @@
-from os import getcwd
+from pathlib import Path
 from sys import exit, path
 
 from openpyxl import load_workbook
 
-path.append(getcwd())
-path.append(r'..')
+# Add all the paths in environment
+folder_path = str(Path(__file__).parent.absolute())
+package_path = str(Path(folder_path).parent.absolute())
+file_path = str(Path(__file__).absolute())
+
+path.append(file_path)
+path.append(folder_path)
+path.append(package_path)
 
 # Import later to avoid import error
 import FlameSoft.fs as fs
@@ -32,7 +38,7 @@ def read_txt(path: str):
     return ans
 
 
-path_to_excel = r'E:\Github\Flame-Speed-Tool\FlameSoft\FlameSoft.xlsm'
+path_to_excel = folder_path + r'\\FlameSoft.xlsm'
 
 try:
     wb = load_workbook(path_to_excel, read_only=True, data_only=True)
