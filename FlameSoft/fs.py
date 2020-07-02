@@ -93,16 +93,9 @@ class Flame(object):
             # Capture the video
             cap = cv2.VideoCapture(self.path)
             success, frame = cap.read()
+
             # Rearrage the crop points for left
-            x_start = min(crop_points[0][0], crop_points[1][0])
-            if x_start < 0:
-                x_start = 0
-            x_end = max(crop_points[0][0], crop_points[1][0])
-            y_start = min(crop_points[0][1], crop_points[1][1])
-            if y_start < 0:
-                y_start = 0
-            y_end = max(crop_points[0][1], crop_points[1][1])
-            crop_points = [(x_start, y_start), (x_end, y_end)]
+            crop_points = Points(crop_points)
 
             frame1 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
                      crop_points[0][0]:crop_points[1][0]]
@@ -361,8 +354,28 @@ class Flame(object):
         return 0
 
 
+def Points(crop_points: list):
+    """Method to convert the croped list to appropriate format for left and right"""
+    # Rearrage the crop points for left
+    x_start = min(crop_points[0][0], crop_points[1][0])
+    if x_start < 0:
+        x_start = 0
+    x_end = max(crop_points[0][0], crop_points[1][0])
+    y_start = min(crop_points[0][1], crop_points[1][1])
+    if y_start < 0:
+        y_start = 0
+    y_end = max(crop_points[0][1], crop_points[1][1])
+    ans = [(x_start, y_start), (x_end, y_end)]
+    return ans
+
+
 if __name__ == '__main__':
     path = r'E:\Github\Flame-Speed-Tool\bin\test.avi'
+
+    # print("File      Path:", Path(__file__).absolute())
+    # print("Directory Path:", Path().absolute())
+    x = __file__
+    pass
 
     # points = Crop(path=path, out=r'E:\Github\Flame-Speed-Tool').crop_video()
     # cls1 = Flame(path)
