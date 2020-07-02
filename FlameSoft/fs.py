@@ -246,15 +246,11 @@ class Flame(object):
             points = Crop().crop_image(path_)
             img = cv2.imread(path_)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
             # Get the values of the points sorted for the slice of the array
-            x_start = min(points[0][0], points[1][0])
-            if x_start < 0:
-                x_start = 0
-            x_end = max(points[0][0], points[1][0])
-            y_start = min(points[0][1], points[1][1])
-            if y_start < 0:
-                y_start = 0
-            y_end = max(points[0][1], points[1][1])
+            points = Points(points)
+            x_start, y_start = points[0]
+            x_end, y_end = points[1]
 
             # Assign pixels the value of 255 (white)
             img[y_start:y_end, x_start:x_end] = 255
@@ -280,14 +276,9 @@ class Flame(object):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Get the values of the points sorted for the slice of the array
-        x_start = min(points[0][0], points[1][0])
-        if x_start < 0:
-            x_start = 0
-        x_end = max(points[0][0], points[1][0])
-        y_start = min(points[0][1], points[1][1])
-        if y_start < 0:
-            y_start = 0
-        y_end = max(points[0][1], points[1][1])
+        points = Points(points)
+        x_start, y_start = points[0]
+        x_end, y_end = points[1]
 
         # Assign pixels the value of 0 (black)
         img[y_start:y_end, x_start:x_end] = 0
