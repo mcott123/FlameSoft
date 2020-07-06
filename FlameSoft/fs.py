@@ -2,7 +2,7 @@ import os
 
 import cv2 as cv2
 import numpy as np
-from pandas import read_csv
+from pandas import read_csv, Series
 
 
 class Crop(object):
@@ -84,7 +84,8 @@ class Flame(object):
         Flame.outpath = self.out + r'\bin' + r'\output.xlsx'
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool,
-                height: float):
+                height: float, sub_frame=1):
+        count_frame = 0
         try:
             # Assert check for the length of inputs
             if len(filter_size) != breaks or len(thresh_val) != breaks:
@@ -128,7 +129,7 @@ class Flame(object):
 
                 # Read the frames
                 success, frame = cap.read()
-
+                count_frame = count_frame + 1
                 # Break the loop on the last frame
                 if not success:
                     break
@@ -139,7 +140,9 @@ class Flame(object):
 
                 # Substract the first frame from subsequent frames to reduce noise
                 original = frame
-                frame = frame - frame1
+
+                if sub_frame:
+                    frame = frame - frame1
 
                 # Initiate count to count all the broken images
                 count = 0
@@ -207,6 +210,7 @@ class Flame(object):
             # Save the image to numpy arrray
             np.save(Flame.arraypath, ans)
             cv2.imwrite(Flame.imagepath, ans)
+            print('Total Frames =', count_frame)
             cap.release()
             cv2.destroyAllWindows()
 
@@ -328,7 +332,13 @@ class Flame(object):
         # Make the columns for time and distance
         df['Distance (ft)'] = df['XPixel'] * pixel_length
         df['Time (msec)'] = df['Frame'] * 1000 / fps
+        df['Time (sec)'] = df['Frame'] / fps
+        df['Distance Diff'] = Series(df['Distance (ft)']).diff(periods=1)
+        df['Time Diff'] = Series(df['Time (sec)']).diff(periods=1)
 
+        df['Velocity (ft/sec)'] = df['Distance Diff'] / df['Time Diff']
+        df.replace(np.inf, np.nan, inplace=True)
+        df.fillna(method='ffill', inplace=True)
         # Save the df to excel
         df.to_excel(Flame.outpath)
 
