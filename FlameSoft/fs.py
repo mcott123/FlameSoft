@@ -1,8 +1,10 @@
 import os
 
 import cv2 as cv2
+import matplotlib.pyplot as plt
 import numpy as np
-from pandas import read_csv, Series
+from pandas import read_csv, Series, DataFrame
+from scipy.optimize import curve_fit
 
 
 class Crop(object):
@@ -71,6 +73,7 @@ class Flame(object):
     imagepath = ""
     arraypath = ""
     outpath = ""
+    plotpath = ""
 
     def __init__(self, path: str, out: str):
         self.path = path
@@ -82,6 +85,7 @@ class Flame(object):
         Flame.imagepath = self.out + r'\bin' + r'\process.png'
         Flame.arraypath = self.out + r'\bin' + r'\numpy'
         Flame.outpath = self.out + r'\bin' + r'\output.xlsx'
+        Flame.plotpath = self.out + r'\bin' + r'\curve_fit.png'
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool,
                 height: float, sub_frame=1):
@@ -332,15 +336,33 @@ class Flame(object):
         # Make the columns for time and distance
         df['Distance (ft)'] = df['XPixel'] * pixel_length
         df['Time (msec)'] = df['Frame'] * 1000 / fps
-        df['Time (sec)'] = df['Frame'] / fps
-        df['Distance Diff'] = Series(df['Distance (ft)']).diff(periods=1)
-        df['Time Diff'] = Series(df['Time (sec)']).diff(periods=1)
+        # df['Time (sec)'] = df['Frame'] / fps
+        # df['Distance Diff'] = Series(df['Distance (ft)']).diff(periods=1)
+        # df['Time Diff'] = Series(df['Time (sec)']).diff(periods=1)
+        #
+        # df['Velocity (ft/sec)'] = df['Distance Diff'] / df['Time Diff']
+        # df.replace(np.inf, np.nan, inplace=True)
+        # df.fillna(method='ffill', inplace=True)
 
-        df['Velocity (ft/sec)'] = df['Distance Diff'] / df['Time Diff']
-        df.replace(np.inf, np.nan, inplace=True)
-        df.fillna(method='ffill', inplace=True)
+        x_data = np.linspace(start=df['Time (msec)'][0], stop=df['Time (msec)'][df.index[-1]], num=1000)
+
+        coeff, cov = curve_fit(Flame.func, df['Time (msec)'], df['Distance (ft)'])
+
+        df1 = DataFrame()
+        df1['Time (msec)'] = x_data
+        df1['Distance (ft)'] = Flame.func(x_data, *coeff)
+        df1['Distance diff'] = Series(df1['Distance (ft)']).diff(periods=1)
+        df1['Time diff'] = Series(df1['Time (msec)'] / 1000).diff(periods=1)
+        df1['Velocity (ft/sec)'] = df1['Distance diff'] * 1000 / df1['Time diff']
+
+        plt.scatter(df['Time (msec)'], df['Distance (ft)'], s=1)
+        plt.plot(x_data, df1['Distance (ft)'], linewidth=2, color='red')
+        plt.xlabel(' Time (msec)')
+        plt.ylabel('Distance (ft)')
+        plt.savefig(Flame.plotpath)
+
         # Save the df to excel
-        df.to_excel(Flame.outpath)
+        df1.to_excel(Flame.outpath, index=False)
 
         return df
 
@@ -353,6 +375,11 @@ class Flame(object):
         cv2.destroyAllWindows()
 
         return 0
+
+    @staticmethod
+    def func(x, a1, a2, a3, a4, a5, a6):
+        """Function to return the 6 degreee polynomial"""
+        return a1 + a2 * x ** 2 + a3 * x ** 3 + a4 * x ** 4 + a5 * x ** 5 + a6 * x ** 6
 
 
 def Points(crop_points: list):
