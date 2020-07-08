@@ -60,7 +60,7 @@ try:
     cls = fs.Flame(path=vals['path'], out=vals['out'])
 
 except Exception as _:
-    print(_)
+    print("Error:  ", _)
 
 try:
     if vals['operation'] == 1:
@@ -99,5 +99,5 @@ try:
     exit()
 
 except Exception as _:
-    print(_)
+    print("Error:  ", _)
     exit()
