@@ -336,13 +336,6 @@ class Flame(object):
         # Make the columns for time and distance
         df['Distance (ft)'] = df['XPixel'] * pixel_length
         df['Time (msec)'] = df['Frame'] * 1000 / fps
-        # df['Time (sec)'] = df['Frame'] / fps
-        # df['Distance Diff'] = Series(df['Distance (ft)']).diff(periods=1)
-        # df['Time Diff'] = Series(df['Time (sec)']).diff(periods=1)
-        #
-        # df['Velocity (ft/sec)'] = df['Distance Diff'] / df['Time Diff']
-        # df.replace(np.inf, np.nan, inplace=True)
-        # df.fillna(method='ffill', inplace=True)
 
         x_data = np.linspace(start=df['Time (msec)'][0], stop=df['Time (msec)'][df.index[-1]], num=1000)
 
