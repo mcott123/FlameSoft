@@ -27,7 +27,7 @@ class Crop(object):
         elif event == cv2.EVENT_LBUTTONUP:
             self.points[1] = (x, y)
 
-            # Draw the rectangle around the slected path
+            # Draw the rectangle around the selected path
             cv2.rectangle(self.image, self.points[0], self.points[1], (255, 0, 0), 3)
             cv2.imshow('Frame', self.image)
 
@@ -103,7 +103,7 @@ class Flame(object):
             crop_points = Points(crop_points)
 
             frame1 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)[crop_points[0][1]:crop_points[1][1],
-                     crop_points[0][0]:crop_points[1][0]]
+                                  crop_points[0][0]:crop_points[1][0]]
             # Break the image inot parts
             length, width = frame1.shape
             array = self.break_image(breaks, (length, width))
@@ -352,6 +352,7 @@ class Flame(object):
         plt.plot(x_data, df1['Distance (ft)'], linewidth=2, color='red')
         plt.xlabel(' Time (msec)')
         plt.ylabel('Distance (ft)')
+        # plt.gca().invert_yaxis()
         plt.savefig(Flame.plotpath)
 
         # Save the df to excel
