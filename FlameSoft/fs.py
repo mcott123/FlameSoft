@@ -85,6 +85,7 @@ class Flame(object):
         Flame.imagepath = self.out + r'\bin' + r'\process.png'
         Flame.arraypath = self.out + r'\bin' + r'\numpy'
         Flame.outpath = self.out + r'\bin' + r'\output.xlsx'
+        Flame.rawpath = self.out + r'\bin' + r'\rawoutput.xlsx'
         Flame.plotpath = self.out + r'\bin' + r'\curve_fit.png'
 
     def process(self, breaks: int, filter_size: list, thresh_val: list, crop_points: list, flow_right: bool,
@@ -356,8 +357,8 @@ class Flame(object):
         plt.savefig(Flame.plotpath)
 
         # Save the df to excel
-        df1.to_excel(Flame.outpath, index=False)
-
+        df1.to_excel(Flame.outpath, sheet_name='fit_data', index=False)
+        df.to_excel(Flame.rawpath, sheet_name='raw_data', index=False)
         return df
 
     def view_pimage(self):
